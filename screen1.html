@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Тур по замку Culzean - Интерьеры</title>
+    <!-- Предзагрузка критических ресурсов -->
+    <link rel="preconnect" href="https://sketchfab.com">
+    <link rel="preload" href="https://sketchfab.com/models/e74928dc62fe457892e52dd97b6aa6e0/embed" as="document">
+    <link rel="preload" href="https://sketchfab.com/models/06e6dada397942d2bb173e83cba3db5c/embed" as="document">
+    <style>
+        :root {
+            --primary: #9c27b0;
+            --primary-light: #ba68c8;
+            --primary-dark: #7b1fa2;
+            --secondary: #673ab7;
+            --text: #f3e5f5;
+            --bg: #1a1a2e;
+            --panel-bg: rgba(30, 30, 60, 0.95);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            width: 100%;
+            padding: 15px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary-dark), var(--secondary));
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin: 0 0 5px 0;
+            background: linear-gradient(90deg, #e1bee7, #d1c4e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .model-container {
+            width: 100%;
+            height: 60vh;
+            min-height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            background: #000;
+            position: relative;
+        }
+        
+        #interior-embed {
+            width: 100%;
+            height: 100%;
+            border: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+        
+        .progress-container {
+            width: 80%;
+            max-width: 300px;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: 0.9rem;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 120px;
+            justify-content: center;
+        }
+        
+        .control-btn i {
+            font-size: 1rem;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .room-info {
+            background: var(--panel-bg);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .room-info h2 {
+            margin-top: 0;
+            color: var(--primary-light);
+            font-size: 1.2rem;
+        }
+        
+        .room-info p {
+            margin-bottom: 0;
+            line-height: 1.5;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Адаптация для разных экранов */
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .model-container {
+                height: 70vh;
+            }
+            
+            .controls {
+                flex-wrap: nowrap;
+            }
+        }
+        
+        @media (orientation: landscape) and (max-width: 767px) {
+            .model-container {
+                height: 70vh;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Интерьеры замка Culzean</h1>
+            <p id="location-title">Загрузка...</p>
+        </header>
+        
+        <div class="controls">
+            <button class="control-btn" id="prev-btn">
+                <i class="fas fa-arrow-left"></i>
+                <span>Назад</span>
+            </button>
+            <button class="control-btn" id="switch-btn">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Загрузка...</span>
+            </button>
+        </div>
+        
+        <div class="model-container">
+            <div class="loading" id="loading">
+                <div class="spinner">
+                    <div class="double-bounce1"></div>
+                    <div class="double-bounce2"></div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="progress-bar"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">Подготовка 3D-модели...</div>
+                </div>
+            </div>
+            <iframe id="interior-embed" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+        </div>
+        
+        <div class="room-info" id="room-info">
+            <h2 id="room-name">Загрузка описания...</h2>
+            <p id="room-desc">Пожалуйста, подождите, пока загрузится 3D-модель интерьера.</p>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация моделей
+        const ROOMS = {
+            vestibule: {
+                id: 'e74928dc62fe457892e52dd97b6aa6e0',
+                title: 'Верхний вестибюль',
+                description: 'Элегантный вестибюль на верхних этажах замка с богато украшенными стенами и лестницей, ведущей в главный зал.',
+                buttonText: 'Главный зал',
+                next: 'hall'
+            },
+            hall: {
+                id: '06e6dada397942d2bb173e83cba3db5c',
+                title: 'Главный зал',
+                description: 'Величественный главный зал замка с высокими потолками, массивными люстрами и роскошным убранством.',
+                buttonText: 'Вестибюль',
+                next: 'vestibule'
+            }
+        };
+
+        // Текущее состояние
+        let currentRoom = 'vestibule';
+        let viewerApi = null;
+        let modelLoaded = false;
+
+        // DOM элементы
+        const elements = {
+            loading: document.getElementById('loading'),
+            iframe: document.getElementById('interior-embed'),
+            switchBtn: document.getElementById('switch-btn'),
+            prevBtn: document.getElementById('prev-btn'),
+            roomInfo: document.getElementById('room-info'),
+            roomName: document.getElementById('room-name'),
+            roomDesc: document.getElementById('room-desc'),
+            locationTitle: document.getElementById('location-title'),
+            progressBar: document.getElementById('progress-bar'),
+            progressText: document.getElementById('progress-text')
+        };
+
+        // Инициализация Service Worker для кэширования
+        function initServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }).catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            }
+        }
+
+        // Обновление прогресса загрузки
+        function updateProgress(percent, text) {
+            elements.progressBar.style.width = `${percent}%`;
+            elements.progressText.textContent = text || `Загрузка: ${percent}%`;
+        }
+
+        // Загрузка модели с оптимизированными параметрами
+        function loadModel(roomId) {
+            modelLoaded = false;
+            elements.iframe.style.opacity = '0';
+            elements.loading.style.display = 'flex';
+            
+            const room = ROOMS[roomId];
+            const embedUrl = `https://sketchfab.com/models/${room.id}/embed`;
+            
+            // Оптимизированные параметры для быстрой загрузки
+            const params = new URLSearchParams({
+                autostart: 1,
+                preload: 1,
+                ui_controls: 1,
+                ui_infos: 0,
+                ui_stop: 0,
+                ui_watermark: 0,
+                camera: 0,
+                annotations_visible: 0,
+                dnt: 1,
+                speed: 0.5,
+                autospin: 0.2,
+                quality: 'low', // Сначала низкое качество
+                texture_size: 512, // Уменьшенные текстуры
+                lazy: 1
+            });
+
+            // Этапы загрузки
+            updateProgress(10, 'Подготовка модели...');
+            
+            // Основная загрузка
+            elements.iframe.src = `${embedUrl}?${params.toString()}`;
+            
+            // Имитация прогресса (в реальном проекте используйте события загрузки)
+            const progressSteps = [
+                {percent: 30, text: 'Загрузка текстур...'},
+                {percent: 60, text: 'Оптимизация геометрии...'},
+                {percent: 90, text: 'Финальная подготовка...'}
+            ];
+            
+            progressSteps.forEach((step, i) => {
+                setTimeout(() => {
+                    updateProgress(step.percent, step.text);
+                }, (i + 1) * 500);
+            });
+
+            elements.iframe.onload = () => {
+                viewerApi = elements.iframe.contentWindow;
+                updateProgress(100, 'Готово!');
+                
+                setTimeout(() => {
+                    elements.loading.style.opacity = '0';
+                    setTimeout(() => {
+                        elements.loading.style.display = 'none';
+                        elements.iframe.style.opacity = '1';
+                    }, 300);
+                    
+                    updateRoomInfo(roomId);
+                    modelLoaded = true;
+                    
+                    // После загрузки базовой модели можно улучшить качество
+                    enhanceQuality();
+                }, 500);
+            };
+        }
+
+        // Улучшение качества после первоначальной загрузки
+        function enhanceQuality() {
+            if (viewerApi && modelLoaded) {
+                viewerApi.postMessage({
+                    type: 'setQuality',
+                    value: 'high'
+                }, '*');
+                
+                viewerApi.postMessage({
+                    type: 'setTextureSize',
+                    value: 1024
+                }, '*');
+            }
+        }
+
+        // Обновление информации о комнате
+        function updateRoomInfo(roomId) {
+            const room = ROOMS[roomId];
+            elements.roomName.textContent = room.title;
+            elements.roomDesc.textContent = room.description;
+            elements.locationTitle.textContent = room.title;
+            elements.switchBtn.innerHTML = `<i class="fas fa-exchange-alt"></i><span>${room.buttonText}</span>`;
+        }
+
+        // Переключение между комнатами
+        function switchRoom() {
+            if (!modelLoaded) return;
+            
+            currentRoom = ROOMS[currentRoom].next;
+            loadModel(currentRoom);
+        }
+
+        // Инициализация
+        function init() {
+            initServiceWorker();
+            loadModel(currentRoom);
+            
+            // Обработчики событий
+            elements.switchBtn.addEventListener('click', switchRoom);
+            elements.prevBtn.addEventListener('click', () => {
+                window.history.back();
+            });
+            
+            // Показать информацию о первой комнате
+            updateRoomInfo(currentRoom);
+        }
+
+        // Запуск при полной загрузке страницы
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <!-- Service Worker -->
+    <script>
+        // sw.js будет обслуживать эти модели
+        const CACHE_NAME = 'castle-3d-v1';
+        const urlsToCache = [
+            '/',
+            'https://sketchfab.com/models/e74928dc62fe457892e52dd97b6aa6e0/embed',
+            'https://sketchfab.com/models/06e6dada397942d2bb173e83cba3db5c/embed',
+            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
+            'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap'
+        ];
+
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open('${CACHE_NAME}')
+                            .then(cache => cache.addAll(${JSON.stringify(urlsToCache)}))
+                    );
+                });
+                
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => response || fetch(event.request))
+                    );
+                });
+            `;
+            
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => console.log('SW registered'))
+                .catch(err => console.log('SW registration failed: ', err));
+        }
+    </script>
+</body>
+</html>

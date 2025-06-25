@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Permissions-Policy" content="accelerometer=(), gyroscope=(), magnetometer=(), xr-spatial-tracking=()">
+    <title>3D Тур по замку Culzean</title>
+    
+    <!-- Предзагрузка критических ресурсов -->
+    <link rel="preconnect" href="https://sketchfab.com">
+    <link rel="preload" href="https://sketchfab.com/models/c686f6821e7741f08523654255069f99/embed" as="document">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" as="style">
+    
+    <style>
+        :root {
+            --primary: #9c27b0;
+            --primary-light: #ba68c8;
+            --primary-dark: #7b1fa2;
+            --secondary: #673ab7;
+            --text: #f3e5f5;
+            --bg: #1a1a2e;
+            --panel-bg: rgba(30, 30, 60, 0.95);
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            padding: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, var(--primary-dark), var(--secondary));
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin: 0 0 5px 0;
+            background: linear-gradient(90deg, #e1bee7, #d1c4e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding: 0 10px;
+        }
+        
+        header p {
+            margin: 0;
+            font-size: clamp(0.8rem, 3vw, 0.9rem);
+            opacity: 0.9;
+            padding: 0 10px;
+        }
+        
+        .model-container {
+            position: relative;
+            width: 100%;
+            height: 60vh;
+            min-height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            background: #000;
+            contain: strict;
+        }
+        
+        #sketchfab-embed {
+            width: 100%;
+            height: 100%;
+            border: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg);
+            z-index: 10;
+            transition: opacity 0.3s ease;
+        }
+        
+        .progress-container {
+            width: 80%;
+            max-width: 300px;
+            margin: 15px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-light), var(--primary));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: 0.9rem;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .hotspot {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            box-shadow: 0 0 0 0 rgba(156, 39, 176, 0.7);
+            animation: pulse 2s infinite;
+            transition: all 0.2s;
+            opacity: 0;
+            touch-action: none;
+            will-change: transform, opacity;
+        }
+        
+        .hotspot.active {
+            opacity: 1;
+        }
+        
+        .hotspot:active {
+            transform: scale(1.2);
+            background: var(--primary-light);
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(156, 39, 176, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(156, 39, 176, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(156, 39, 176, 0); }
+        }
+        
+        .info-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--panel-bg);
+            z-index: 100;
+            display: none;
+            overflow-y: auto;
+            padding: 20px;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        
+        .info-panel h2 {
+            margin-top: 0;
+            color: var(--primary-light);
+            padding-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .info-panel p, .info-panel ul {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .close-btn {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            z-index: 101;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            will-change: transform;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-height: 60px;
+            will-change: transform;
+        }
+        
+        .control-btn i {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 50;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            will-change: transform;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        /* Адаптивные стили */
+        @media (orientation: landscape) {
+            .container {
+                padding: 10px;
+            }
+            
+            .model-container {
+                height: 65vh;
+            }
+            
+            .controls {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+            }
+            
+            .control-btn {
+                padding: 8px 5px;
+                min-height: 50px;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            header {
+                padding: 25px 0;
+            }
+            
+            .model-container {
+                height: 70vh;
+            }
+            
+            .controls {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+            }
+            
+            .control-btn {
+                padding: 15px 10px;
+                font-size: 1rem;
+                min-height: auto;
+                flex-direction: row;
+                gap: 8px;
+            }
+            
+            .control-btn i {
+                margin-bottom: 0;
+            }
+        }
+
+        /* Всплывающие окна */
+        .popup {
+            position: absolute;
+            background: var(--panel-bg);
+            border-radius: 10px;
+            padding: 10px 15px;
+            max-width: 200px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            border: 1px solid var(--primary-light);
+            z-index: 20;
+            display: none;
+            backdrop-filter: blur(5px);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            will-change: transform, opacity;
+        }
+
+        .popup-title {
+            font-weight: bold;
+            color: var(--primary-light);
+            margin-bottom: 5px;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+    </style>
+    
+    <!-- Отложенная загрузка не критичных стилей -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" media="print" onload="this.media='all'">
+    
+    <!-- Предзагрузка аудио -->
+    <link rel="preload" href="music/GOT.mp3" as="audio">
+</head>
+<body>
+   <audio id="background-music" loop preload="metadata">
+        <source src="music/GOT.mp3" type="audio/mpeg">
+        Ваш браузер не поддерживает аудио элемент.
+    </audio>
+
+    <button class="music-control" id="music-toggle">
+        <i class="fas fa-volume-up"></i>
+    </button>
+
+    <div class="container">
+        <header>
+            <h1>3D Тур по замку Culzean. Для Заюши.</h1>
+            <p>Исследуй архитектурные детали в интерактивном режиме</p>
+        </header>
+        
+        <div class="controls">
+            <button class="control-btn" id="reset-view">
+                <i class="fas fa-home"></i>
+                <span>Сброс вида</span>
+            </button>
+            <button class="control-btn" id="toggle-animation">
+                <i class="fas fa-play"></i>
+                <span>Анимация</span>
+            </button>
+            <button class="control-btn" id="toggle-vr">
+                <i class="fas fa-vr-cardboard"></i>
+                <span>VR Режим</span>
+            </button>
+            <button class="control-btn" id="toggle-info">
+                <i class="fas fa-info-circle"></i>
+                <span>О замке</span>
+            </button>
+        </div>
+        
+        <div class="model-container">
+            <div class="loading" id="loading">
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="progress-bar"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">Подготовка 3D-модели...</div>
+                </div>
+            </div>
+            
+            <!-- Горячие точки -->
+            <div class="hotspot" style="top: 25%; left: 45%;" data-target="towers">1</div>
+            <div class="hotspot" style="top: 60%; left: 30%;" data-target="entrance">2</div>
+            <div class="hotspot" style="top: 40%; left: 65%;" data-target="garden">3</div>
+            
+            <!-- Всплывающие окна -->
+            <div class="popup" id="towers-popup" style="top: 15%; left: 50%;">
+                <button class="popup-close">&times;</button>
+                <div class="popup-title">Башни замка</div>
+                <div class="popup-content">Главная башня высотой 50 метров</div>
+            </div>
+            
+            <div class="popup" id="entrance-popup" style="top: 55%; left: 25%;">
+                <button class="popup-close">&times;</button>
+                <div class="popup-title">Главный вход</div>
+                <div class="popup-content">Украшен гербом семьи Кеннеди</div>
+            </div>
+            
+            <div class="popup" id="garden-popup" style="top: 35%; left: 70%;">
+                <button class="popup-close">&times;</button>
+                <div class="popup-title">Сады замка</div>
+                <div class="popup-content">Площадь более 600 акров</div>
+            </div>
+            
+            <iframe id="sketchfab-embed" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+        </div>
+    </div>
+
+    <!-- Информационные панели -->
+    <div class="info-panel" id="towers-panel">
+        <button class="close-btn">&times;</button>
+        <h2>Архитектурные башни</h2>
+        <p>Замок Culzean славится своими впечатляющими башнями, построенными в конце 18 века. Главная башня достигает 50 метров в высоту.</p>
+        <p>Башни выполнены в неоготическом стиле и служили как декоративными элементами, так и оборонительными сооружениями.</p>
+    </div>
+    
+    <div class="info-panel" id="entrance-panel">
+        <button class="close-btn">&times;</button>
+        <h2>Главный вход</h2>
+        <p>Величественный парадный вход украшен фамильным гербом семьи Кеннеди, которая владела замком более 400 лет.</p>
+        <p>Обратите внимание на искусную резьбу по камню и стрельчатые арки, характерные для шотландской архитектуры.</p>
+    </div>
+    
+    <div class="info-panel" id="garden-panel">
+        <button class="close-btn">&times;</button>
+        <h2>Сады и парк</h2>
+        <p>Замок окружен великолепными садами площадью более 600 акров. Здесь представлены:</p>
+        <ul>
+            <li>Французский регулярный парк</li>
+            <li>Английский пейзажный сад</li>
+            <li>Оранжерея с экзотическими растениями</li>
+            <li>Сад скульптур</li>
+        </ul>
+    </div>
+    
+    <div class="info-panel" id="info-panel">
+        <button class="close-btn">&times;</button>
+        <h2>О замке Culzean</h2>
+        <p>Замок Culzean — это исторический памятник архитектуры XVIII века, расположенный на западном побережье Шотландии.</p>
+        <p>Построенный архитектором Робертом Адамом, замок представляет собой прекрасный пример шотландского неоклассицизма с элементами готики.</p>
+        <p>Сегодня замок открыт для посещения и управляется Национальным фондом Шотландии.</p>
+    </div>
+
+    <footer>
+        <p>© 2025 Виртуальный тур по замку Culzean для тебя вот | Все права защищены мной</p>
+    </footer>
+
+    <script>
+        // Конфигурация
+        const MODEL_UID = 'c686f6821e7741f08523654255069f99';
+        const EMBED_URL = `https://sketchfab.com/models/${MODEL_UID}/embed`;
+        
+        // Элементы
+        const elements = {
+            loading: document.getElementById('loading'),
+            iframe: document.getElementById('sketchfab-embed'),
+            musicPlayer: document.getElementById('background-music'),
+            musicToggle: document.getElementById('music-toggle'),
+            progressBar: document.getElementById('progress-bar'),
+            progressText: document.getElementById('progress-text')
+        };
+        
+        let viewerApi = null;
+        let musicPlaying = false;
+        let modelLoaded = false;
+        
+        // Оптимизированная загрузка модели
+        function initModel() {
+            const params = new URLSearchParams({
+                autostart: 1,
+                ui_controls: 0,
+                ui_infos: 0,
+                ui_stop: 0,
+                ui_watermark: 0,
+                preload: 1,
+                camera: 0,
+                annotations_visible: 0,
+                dnt: 1,
+                speed: 0.5,
+                autospin: 0.2,
+                quality: 'low',
+                texture_size: 512,
+                lazy: 1
+            });
+            
+            // Установка атрибутов iframe
+            elements.iframe.setAttribute('allow', 'autoplay; fullscreen; xr-spatial-tracking; accelerometer; gyroscope');
+            elements.iframe.setAttribute('allowfullscreen', 'true');
+            elements.iframe.setAttribute('mozallowfullscreen', 'true');
+            elements.iframe.setAttribute('webkitallowfullscreen', 'true');
+            
+            // Имитация прогресса загрузки
+            const progressSteps = [
+                {percent: 20, text: 'Загрузка модели...'},
+                {percent: 50, text: 'Оптимизация текстур...'},
+                {percent: 80, text: 'Подготовка к просмотру...'}
+            ];
+            
+            progressSteps.forEach((step, i) => {
+                setTimeout(() => {
+                    updateProgress(step.percent, step.text);
+                }, (i + 1) * 500);
+            });
+            
+            // Загрузка модели
+            elements.iframe.src = `${EMBED_URL}?${params.toString()}`;
+            
+            elements.iframe.addEventListener('load', () => {
+                viewerApi = elements.iframe.contentWindow;
+                updateProgress(100, 'Готово!');
+                
+                setTimeout(() => {
+                    elements.loading.style.opacity = '0';
+                    setTimeout(() => {
+                        elements.loading.style.display = 'none';
+                        elements.iframe.style.opacity = '1';
+                    }, 300);
+                    
+                    // Показать горячие точки
+                    document.querySelectorAll('.hotspot').forEach(hotspot => {
+                        hotspot.classList.add('active');
+                    });
+                    
+                    // Показать всплывающие окна
+                    showPopups();
+                    
+                    modelLoaded = true;
+                    
+                    // Улучшить качество после загрузки
+                    enhanceQuality();
+                }, 500);
+            });
+            
+            elements.iframe.addEventListener('error', () => {
+                elements.loading.innerHTML = '<p>Ошибка загрузки модели. Пожалуйста, проверьте подключение к интернету.</p>';
+                console.error("Ошибка загрузки модели Sketchfab");
+            });
+        }
+        
+        // Улучшение качества после загрузки
+        function enhanceQuality() {
+            if (viewerApi && modelLoaded) {
+                viewerApi.postMessage({
+                    type: 'setQuality',
+                    value: 'high'
+                }, '*');
+                
+                viewerApi.postMessage({
+                    type: 'setTextureSize',
+                    value: 1024
+                }, '*');
+            }
+        }
+        
+        // Обновление прогресса загрузки
+        function updateProgress(percent, text) {
+            elements.progressBar.style.width = `${percent}%`;
+            elements.progressText.textContent = text || `Загрузка: ${percent}%`;
+        }
+        
+        // Показать всплывающие окна
+        function showPopups() {
+            const popups = document.querySelectorAll('.popup');
+            
+            popups.forEach(popup => {
+                popup.style.display = 'block';
+                
+                popup.querySelector('.popup-close').addEventListener('click', () => {
+                    popup.style.display = 'none';
+                });
+                
+                setTimeout(() => {
+                    if (popup.style.display === 'block') {
+                        popup.style.display = 'none';
+                    }
+                }, 5000);
+            });
+        }
+        
+        // Инициализация музыки
+        function initMusic() {
+            elements.musicPlayer.volume = 0.5;
+            elements.musicPlayer.preload = 'metadata';
+            
+            // Попытка воспроизведения после взаимодействия
+            const tryPlayMusic = () => {
+                const playPromise = elements.musicPlayer.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        musicPlaying = true;
+                        elements.musicToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        localStorage.setItem('musicAutoPlay', 'true');
+                    }).catch(console.error);
+                }
+            };
+            
+            // Одноразовый обработчик для первого клика
+            document.body.addEventListener('click', function firstInteraction() {
+                tryPlayMusic();
+                document.body.removeEventListener('click', firstInteraction);
+            }, { once: true });
+        }
+        
+        // Переключение музыки
+        elements.musicToggle.addEventListener('click', function() {
+            if (musicPlaying) {
+                elements.musicPlayer.pause();
+                musicPlaying = false;
+                this.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                localStorage.setItem('musicAutoPlay', 'false');
+            } else {
+                elements.musicPlayer.play()
+                    .then(() => {
+                        musicPlaying = true;
+                        this.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        localStorage.setItem('musicAutoPlay', 'true');
+                    })
+                    .catch(console.error);
+            }
+        });
+        
+        // Управление горячими точками
+        document.querySelectorAll('.hotspot').forEach(hotspot => {
+            hotspot.addEventListener('click', function() {
+                const target = this.getAttribute('data-target');
+                document.getElementById(`${target}-panel`).style.display = 'block';
+            });
+        });
+        
+        // Управление кнопками
+        document.getElementById('reset-view').addEventListener('click', () => {
+            if (viewerApi) {
+                viewerApi.postMessage({
+                    type: 'reset_camera'
+                }, '*');
+            }
+        });
+        
+        document.getElementById('toggle-animation').addEventListener('click', function() {
+            if (viewerApi) {
+                viewerApi.postMessage({
+                    type: 'toggle_animation'
+                }, '*');
+                this.innerHTML = this.innerHTML.includes('Анимация') ? 
+                    '<i class="fas fa-pause"></i><span>Пауза</span>' : 
+                    '<i class="fas fa-play"></i><span>Анимация</span>';
+            }
+        });
+        
+        document.getElementById('toggle-vr').addEventListener('click', () => {
+            if (viewerApi) {
+                viewerApi.postMessage({
+                    type: 'toggle_vr'
+                }, '*');
+            }
+        });
+        
+        document.getElementById('toggle-info').addEventListener('click', () => {
+            document.getElementById('info-panel').style.display = 'block';
+        });
+        
+        // Закрытие панелей
+        document.querySelectorAll('.close-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.closest('.info-panel').style.display = 'none';
+            });
+        });
+        
+        // Инициализация Service Worker
+        function initServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker зарегистрирован');
+                }).catch(err => {
+                    console.log('Ошибка регистрации ServiceWorker:', err);
+                });
+            }
+        }
+        
+        // Запуск при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            // Восстановление состояния музыки
+            const musicAutoPlay = localStorage.getItem('musicAutoPlay') !== 'false';
+            if (musicAutoPlay) {
+                initMusic();
+            } else {
+                musicPlaying = false;
+                elements.musicToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            }
+            
+            // Инициализация модели
+            initModel();
+            
+            // Инициализация Service Worker
+            initServiceWorker();
+        });
+        
+        // Обработчик сообщений от модели
+        window.addEventListener('message', (event) => {
+            if (event.source !== elements.iframe.contentWindow) return;
+            console.log('Сообщение от модели:', event.data);
+        });
+    </script>
+    
+    <!-- Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'castle-3d-v1';
+                const urlsToCache = [
+                    '/',
+                    'https://sketchfab.com/models/c686f6821e7741f08523654255069f99/embed',
+                    'music/GOT.mp3',
+                    'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap',
+                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'
+                ];
+                
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(cache => cache.addAll(urlsToCache))
+                    );
+                });
+                
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => response || fetch(event.request))
+                    );
+                });
+            `;
+            
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => console.log('SW зарегистрирован'))
+                .catch(err => console.log('Ошибка регистрации SW:', err));
+        }
+    </script>
+</body>
+</html>
