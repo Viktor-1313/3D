@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Замок | Голоса стен</title>
+    <style>
+        :root {
+            --primary: #7b1fa2;
+            --primary-light: #ba68c8;
+            --primary-dark: #4a148c;
+            --text: #f3e5f5;
+            --bg: #1a1a2e;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%231a1a2e"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="0.5"/></svg>');
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        h1 {
+            color: var(--primary-light);
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(123, 31, 162, 0.7);
+        }
+        
+        .castle-map {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background-image: url('castle.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            margin: 20px 0;
+        }
+        
+        .voice-point {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle, var(--primary) 0%, rgba(123,31,162,0) 70%);
+            border-radius: 50%;
+            cursor: pointer;
+            transform: scale(1);
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+        
+        .voice-point:hover {
+            transform: scale(1.3);
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.7; }
+        }
+        
+        .voice-message {
+            display: none;
+            position: absolute;
+            background: rgba(40, 40, 60, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 15px;
+            max-width: 300px;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .voice-message h3 {
+            color: var(--primary-light);
+            margin-top: 0;
+        }
+        
+        .voice-message p {
+            margin-bottom: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(123, 31, 162, 0.7);
+        }
+        
+        audio {
+            width: 100%;
+            margin-top: 15px;
+            filter: drop-shadow(0 0 5px rgba(123, 31, 162, 0.5));
+        }
+        
+        .whisper-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 50;
+            display: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="whisper-effect" id="whisper-effect"></div>
+    
+    <div class="container">
+        <h1>Голоса стен</h1>
+        
+        <p>Прикоснитесь к истории через монологи тех, кто жил в этих стенах. Наведите на мерцающие точки, чтобы услышать шепот веков...</p>
+        
+        <div class="castle-map">
+            <!-- Точки с голосами (координаты подбираются под вашу карту) -->
+            <div class="voice-point" style="top: 20%; left: 30%;" 
+                 data-voice="stonecutter" 
+                 data-title="Каменщик Пьер (1567 г.)"
+                 data-audio="stonecutter.mp3">
+            </div>
+            
+            <div class="voice-point" style="top: 45%; left: 60%;" 
+                 data-voice="maid" 
+                 data-title="Служанка Мари (1789 г.)"
+                 data-audio="maid.mp3">
+            </div>
+            
+            <div class="voice-point" style="top: 70%; left: 40%;" 
+                 data-voice="soldier" 
+                 data-title="Солдат Иван (1945 г.)"
+                 data-audio="soldier.mp3">
+            </div>
+            
+            <!-- Всплывающие сообщения -->
+            <div class="voice-message" id="stonecutter-msg" style="top: 10%; left: 35%;">
+                <h3>Каменщик Пьер (1567 г.)</h3>
+                <p>"Мы строили эту башню 3 года. В подножие замуровали серебряную монету - чтобы стояла вечно..."</p>
+                <audio controls>
+                    <source src="stonecutter.mp3" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио.
+                </audio>
+            </div>
+            
+            <div class="voice-message" id="maid-msg" style="top: 50%; left: 65%;">
+                <h3>Служанка Мари (1789 г.)</h3>
+                <p>"Граф сегодня в ярости - из Парижа пришли вести о бунте. Прячет фамильное серебро в потайной нише..."</p>
+                <audio controls>
+                    <source src="maid.mp3" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио.
+                </audio>
+            </div>
+            
+            <div class="voice-message" id="soldier-msg" style="top: 75%; left: 45%;">
+                <h3>Солдат Иван (1945 г.)</h3>
+                <p>"Немцы бежали, оставив документы. В подвале нашли ящики с книгами - спасаем, что можем..."</p>
+                <audio controls>
+                    <source src="soldier.mp3" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио.
+                </audio>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+    <button class="nav-btn" onclick="window.location.href='screen3.html'">← Назад к легендам</button>
+    <div>
+        <button class="nav-btn" onclick="window.location.href='index.html'">На главную</button>
+        <button class="nav-btn" onclick="window.location.href='screen5.html'" 
+                style="margin-left: 10px; background: linear-gradient(to right, var(--primary-dark), var(--primary))">
+            Архив призраков →
+        </button>
+    </div>
+</div>
+
+    <script>
+        // Активация точек с голосами
+        document.querySelectorAll('.voice-point').forEach(point => {
+            const voiceId = point.getAttribute('data-voice');
+            
+            point.addEventListener('mouseenter', () => {
+                // Показываем эффект шепота
+                document.getElementById('whisper-effect').style.display = 'block';
+                
+                // Показываем сообщение
+                document.getElementById(`${voiceId}-msg`).style.display = 'block';
+                
+                // Автовоспроизведение аудио (если разрешено)
+                const audio = document.getElementById(`${voiceId}-msg`).querySelector('audio');
+                audio.play().catch(e => console.log("Автовоспроизведение заблокировано"));
+            });
+            
+            point.addEventListener('mouseleave', () => {
+                document.getElementById('whisper-effect').style.display = 'none';
+                document.getElementById(`${voiceId}-msg`).style.display = 'none';
+                
+                const audio = document.getElementById(`${voiceId}-msg`).querySelector('audio');
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        });
+        
+        // Для мобильных устройств - обработка касаний
+        document.querySelectorAll('.voice-point').forEach(point => {
+            const voiceId = point.getAttribute('data-voice');
+            let isActive = false;
+            
+            point.addEventListener('click', () => {
+                if (isActive) {
+                    document.getElementById('whisper-effect').style.display = 'none';
+                    document.getElementById(`${voiceId}-msg`).style.display = 'none';
+                    const audio = document.getElementById(`${voiceId}-msg`).querySelector('audio');
+                    audio.pause();
+                } else {
+                    document.getElementById('whisper-effect').style.display = 'block';
+                    document.getElementById(`${voiceId}-msg`).style.display = 'block';
+                    const audio = document.getElementById(`${voiceId}-msg`).querySelector('audio');
+                    audio.play().catch(e => console.log("Автовоспроизведение заблокировано"));
+                }
+                isActive = !isActive;
+            });
+        });
+    </script>
+</body>
+</html>

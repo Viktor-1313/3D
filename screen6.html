@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Комната Теней</title>
+    <style>
+        :root {
+            --primary: #7b1fa2;
+            --primary-light: #ba68c8;
+            --primary-dark: #4a148c;
+            --text: #f3e5f5;
+            --bg: #0a0a12;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: var(--primary-light);
+            text-shadow: 0 0 10px rgba(123, 31, 162, 0.7);
+        }
+        
+        .room {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin: 20px auto;
+            background: #111;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .wall {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 250px;
+            background: #000;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .face {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin-top: 30px;
+        }
+        
+        .eye {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .eye.left {
+            top: 60px;
+            left: 40px;
+        }
+        
+        .eye.right {
+            top: 60px;
+            right: 40px;
+        }
+        
+        .eye:hover {
+            background: #500;
+        }
+        
+        .mouth {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 20px;
+            background: #333;
+            border-radius: 0 0 40px 40px;
+        }
+        
+        /* Анимация активации */
+        .eye.active {
+            animation: glow 0.5s infinite alternate;
+            background: #f00 !important;
+            box-shadow: 0 0 20px #f00;
+        }
+        
+        @keyframes glow {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+        
+        /* Скрытая дверь */
+        .hidden-door {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 180px;
+            background: #222;
+            border: 2px solid #f00;
+            display: none;
+            box-shadow: 0 0 30px #f00;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .hidden-door:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 0 50px #f00;
+        }
+        
+        /* Сообщение призрака */
+        .ghost-message {
+            display: none;
+            position: fixed;
+            top: 20%; /* Изменено: всплывающее окно выше */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            z-index: 100;
+            box-shadow: 0 0 50px var(--primary);
+        }
+        
+        .ghost-message h3 {
+            color: var(--primary-light);
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        
+        .ghost-message p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .instructions {
+            margin: 20px 0;
+            color: #ba68c8;
+            font-size: 1.1rem;
+        }
+        
+        .nav-buttons {
+            margin-top: 30px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Комната Теней</h1>
+        <p class="instructions">ответ в секретном письме...</p>
+        
+        <div class="room">
+            <div class="wall">
+                <div class="face">
+                    <div class="eye left" onclick="activateEye(this)"></div>
+                    <div class="eye right" onclick="activateEye(this)"></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
+            
+            <div class="hidden-door" id="hidden-door" onclick="goToScreen7()"></div>
+            
+            <div class="ghost-message" id="ghost-message">
+                <h3>Голос из Тьмы</h3>
+                <p>"Ты разгадал тайну! Этот замок - проход между мирами. За этой дверью тебя ждёт последнее испытание..."</p>
+                <audio id="ghost-voice" controls>
+                    <source src="ghost_voice.mp3" type="audio/mpeg">
+                    Ваш браузер не поддерживает аудио.
+                </audio>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='screen5.html'">← Назад</button>
+            <button class="nav-btn" onclick="window.location.href='index.html'">На главную</button>
+        </div>
+    </div>
+
+    <script>
+        let clickCount = 0;
+        
+        function activateEye(eyeElement) {
+            // Анимация глаза
+            eyeElement.classList.add('active');
+            setTimeout(() => eyeElement.classList.remove('active'), 500);
+            
+            clickCount++;
+            
+            // После 3 кликов - активация
+            if (clickCount >= 3) {
+                unlockSecret();
+            }
+        }
+        
+        function unlockSecret() {
+            // Показываем дверь
+            const door = document.getElementById('hidden-door');
+            door.style.display = 'block';
+            
+            // Анимация появления двери
+            door.style.opacity = '0';
+            let opacity = 0;
+            const fadeIn = setInterval(() => {
+                opacity += 0.05;
+                door.style.opacity = opacity;
+                if (opacity >= 1) clearInterval(fadeIn);
+            }, 30);
+            
+            // Показываем сообщение призрака
+            setTimeout(() => {
+                document.getElementById('ghost-message').style.display = 'block';
+                document.getElementById('ghost-voice').play().catch(e => console.log("Автовоспроизведение заблокировано"));
+            }, 800);
+        }
+        
+        function goToScreen7() {
+            window.location.href = 'screen7.html';
+        }
+    </script>
+</body>
+</html>

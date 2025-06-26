@@ -121,15 +121,17 @@
             text-align: center;
         }
         
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .control-btn {
+.controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    flex: 1;
+    min-width: calc(33% - 10px);
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border: none;
@@ -172,6 +174,20 @@
             margin-bottom: 0;
             line-height: 1.5;
         }
+
+@media (max-width: 768px) {
+    .control-btn {
+        min-width: calc(50% - 10px); /* На мобильных - 2 кнопки в ряд */
+    }
+}
+
+@media (max-width: 480px) {
+    .control-btn {
+        min-width: 100%; /* На маленьких экранах - колонка */
+    }
+}
+
+
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -218,6 +234,10 @@
                 <i class="fas fa-exchange-alt"></i>
                 <span>Загрузка...</span>
             </button>
+ <button class="control-btn" onclick="window.location.href='screen3.html'">
+        <i class="fas fa-book"></i>
+        <span>Легенды</span>
+    </button>
         </div>
         
         <div class="model-container">

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Замок | Архив Призраков</title>
+    <style>
+        :root {
+            --primary: #7b1fa2;
+            --primary-light: #ba68c8;
+            --primary-dark: #4a148c;
+            --text: #f3e5f5;
+            --bg: #1a1a2e;
+            --ink-color: #6a1b9a;
+        }
+        
+        body {
+            font-family: 'Georgia', serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%231a1a2e"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23333" stroke-width="0.5"/></svg>');
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        h1 {
+            color: var(--primary-light);
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(123, 31, 162, 0.7);
+        }
+        
+        .archive {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            margin-top: 40px;
+            position: relative;
+        }
+        
+        .document {
+            width: 220px;
+            height: 320px;
+            background: rgba(30, 30, 50, 0.8);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.5s;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .document:hover {
+            transform: translateY(-10px) rotate(2deg);
+            box-shadow: 0 15px 30px rgba(123, 31, 162, 0.5);
+        }
+        
+        .document h3 {
+            color: var(--primary-light);
+            border-bottom: 1px dashed var(--primary);
+            padding-bottom: 10px;
+            margin-top: 0;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .document p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Эффект "оживающих чернил" */
+        .document::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" opacity="0.05"><path d="M0,0 L100,100 M100,0 L0,100" stroke="white" stroke-width="1"/></svg>');
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .ink-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent 60%, var(--ink-color) 100%);
+            opacity: 0;
+            transition: opacity 0.5s;
+            z-index: 1;
+            mix-blend-mode: multiply;
+        }
+        
+        .document:hover .ink-effect {
+            opacity: 0.3;
+        }
+        
+        .document::after {
+            content: "";
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: var(--primary);
+            border-radius: 50%;
+            opacity: 0.3;
+            filter: blur(5px);
+            z-index: 1;
+        }
+        
+        /* Анимация документов */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(1deg); }
+        }
+        
+        .document:nth-child(odd) {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .document:nth-child(even) {
+            animation: float 7s ease-in-out infinite reverse;
+        }
+        
+        /* Секретный документ (изначально скрыт) */
+        #secret-document {
+            display: none;
+            background: rgba(74, 20, 140, 0.3);
+            border: 1px dashed var(--primary-light);
+        }
+        
+        /* Модальное окно с голосом */
+        #voice-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .voice-message {
+            background: rgba(40, 40, 60, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 10px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 30px rgba(123, 31, 162, 0.7);
+            position: relative;
+        }
+        
+        .voice-message h3 {
+            color: var(--primary-light);
+            margin-top: 0;
+            border-bottom: 1px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        .voice-message p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: var(--primary-light);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            filter: drop-shadow(0 0 5px rgba(123, 31, 162, 0.5));
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(123, 31, 162, 0.7);
+        }
+        
+        /* Прогресс прослушивания */
+        .progress-notice {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Архив Призраков</h1>
+        <p style="text-align: center; max-width: 700px; margin: 0 auto 30px;">
+            Документы, которые не должны были сохраниться... Прикоснитесь к тайнам, записанным дрожащей рукой.
+            <br>Выберите свиток, чтобы услышать голос из прошлого.
+        </p>
+        
+        <div class="archive">
+            <!-- Документ 1: Письмо графини -->
+            <div class="document" onclick="showVoice('letter')">
+                <div class="ink-effect"></div>
+                <h3>Письмо (1792)</h3>
+                <p>«Они идут за нами. Спрячьте детей в часовне...»</p>
+                <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">Найдено за обшивкой камина</p>
+            </div>
+            
+            <!-- Документ 2: Строительный чертёж -->
+            <div class="document" onclick="showVoice('blueprint')">
+                <div class="ink-effect"></div>
+                <h3>Чертёж (1560)</h3>
+                <p>Секретные ходы замка. Отмечена комната без дверей...</p>
+                <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">Обнаружен в тайнике под полом</p>
+            </div>
+            
+            <!-- Документ 3: Приказ о казни -->
+            <div class="document" onclick="showVoice('order')">
+                <div class="ink-effect"></div>
+                <h3>Приказ (1943)</h3>
+                <p>«Замок использовать как штаб. Пленных не брать...»</p>
+                <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">Спрятан в двойном дне ящика</p>
+            </div>
+            
+            <!-- Документ 4: Дневник врача -->
+            <div class="document" onclick="showVoice('diary')">
+                <div class="ink-effect"></div>
+                <h3>Дневник (1837)</h3>
+                <p>«Графиня бредит о "глазах в стенах". Лекарства не помогают...»</p>
+                <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">Зашит в матрас</p>
+            </div>
+            
+            <!-- Секретный документ 5 (изначально скрыт) -->
+            <div class="document" id="secret-document" onclick="showVoice('secret')">
+                <div class="ink-effect" style="opacity: 0.5; background: linear-gradient(to bottom, transparent 30%, #ff0000 100%);"></div>
+                <h3 style="color: #ff6b6b;">ЗАПРЕТНЫЙ СПИСОК (????)</h3>
+                <p>«Те, кто вошли в Комнату Теней, никогда не...»</p>
+                <p style="margin-top: 15px; font-size: 0.8rem; opacity: 0.6;">Найден в черепе статуи</p>
+            </div>
+        </div>
+        
+        <p id="progress-notice" class="progress-notice">
+            Вы открыли 0 из 4 документов. Соберите все, чтобы найти тайное послание.
+        </p>
+        
+        <!-- Модальное окно с голосом -->
+        <div id="voice-modal">
+            <div class="voice-message">
+                <button class="close-btn" onclick="closeModal()">×</button>
+                <h3 id="voice-title">Письмо графини де Ланж</h3>
+                <p id="voice-text"></p>
+                <audio id="voice-audio" controls>
+                    Ваш браузер не поддерживает аудио.
+                </audio>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <button class="nav-btn" onclick="window.location.href='screen4.html'">← Голоса стен</button>
+            <button class="nav-btn" onclick="window.location.href='screen6.html'">Тайная комната →</button>
+        </div>
+    </div>
+
+    <script>
+        // Голосовые данные
+        const voices = {
+            'letter': {
+                title: 'Письмо графини де Ланж (1792)',
+                text: '«Мой дорогой, если ты читаешь это — меня уже нет. Революционеры врываются в каждую усадьбу. Няня спрятала детей в потайной комнате за библиотекой — там, где стоит бюст Вольтера. Поверни его налево, и откроется проход. Там же — фамильные драгоценности и этот пергамент с гербом. Молю Бога, чтобы это письмо дошло...»',
+                audio: 'letter.mp3'
+            },
+            'blueprint': {
+                title: 'Чертёж архитектора Лефевра (1560)',
+                text: '«По приказу графа: между восточной башней и часовней прорыть тоннель. Вход — за третьей статуей в галерее (отсчёт от южного окна). Комнату в конце не обозначать на общих планах — её стены должны остаться тайной. Примечание: кладка у входа содержит символы — три круга и полумесяц. Кто знает ключ — войдёт.»',
+                audio: 'blueprint.mp3'
+            },
+            'order': {
+                title: 'Приказ майора Вермахта (1943)',
+                text: '«Замок занять под командный пункт. Подвал использовать для допросов. Всех пленных после interrogatio — расстрелять. Документы сжечь. Особое указание: комнату с фресками на втором этаже не трогать — там оборудован кабинет для высшего командования. В случае отступления — минировать восточное крыло.»',
+                audio: 'order.mp3'
+            },
+            'diary': {
+                title: 'Дневник доктора Моро (1837)',
+                text: '«12 октября. Графиня вновь жаловалась на "глаза в стенах". Говорит, они следят за ней, особенно ночью. Прописал настойку опия, но это лишь усилило галлюцинации. Сегодня ночью она разбудила весь дом криками: "Они в дымоходе!". Осмотрел указанное место — лишь паутина и старая сажа. Примечание: в восточном крыле действительно странная акустика — иногда слышны вздохи, хотя комнаты пусты...»',
+                audio: 'diary.mp3'
+            },
+            'secret': {
+                title: 'ЗАПРЕТНЫЙ СПИСОК (Дата неизвестна)',
+                text: '«Те, кто вошли в Комнату Теней, никогда не возвращались прежними. Вот имена: Ланж (1790), Моро (1871), Шмидт (1945)... Все они искали То, Что Скрыто. Последняя запись: если читаешь это — проверь северную стену подвала. Там, где кладка образует лик демона, нажми на глаза в последовательности: левый, правый, оба вместе. Но помни — один взгляд назад — и ты останешься с нами навеки.»',
+                audio: 'secret.mp3'
+            }
+        };
+        
+        // Отслеживание открытых документов
+        const openedDocuments = new Set();
+        let secretUnlocked = false;
+        
+        function showVoice(docId) {
+            // Добавляем документ в список открытых
+            if (docId !== 'secret') {
+                openedDocuments.add(docId);
+                updateProgress();
+            }
+            
+            const modal = document.getElementById('voice-modal');
+            modal.style.display = 'flex';
+            
+            document.getElementById('voice-title').textContent = voices[docId].title;
+            document.getElementById('voice-text').textContent = voices[docId].text;
+            
+            const audio = document.getElementById('voice-audio');
+            audio.src = voices[docId].audio;
+            audio.play().catch(e => console.log("Автовоспроизведение заблокировано"));
+        }
+        
+        function closeModal() {
+            document.getElementById('voice-modal').style.display = 'none';
+            const audio = document.getElementById('voice-audio');
+            audio.pause();
+            audio.currentTime = 0;
+            
+            // Проверяем, нужно ли открыть секретный документ
+            if (openedDocuments.size >= 4 && !secretUnlocked) {
+                unlockSecretDocument();
+            }
+        }
+        
+        function updateProgress() {
+            const progress = document.getElementById('progress-notice');
+            progress.style.display = 'block';
+            progress.textContent = `Вы открыли ${openedDocuments.size} из 4 документов. Соберите все, чтобы найти тайное послание.`;
+        }
+        
+        function unlockSecretDocument() {
+            secretUnlocked = true;
+            const secretDoc = document.getElementById('secret-document');
+            secretDoc.style.display = 'block';
+            
+            // Анимация появления
+            secretDoc.style.animation = 'float 3s ease-in-out';
+            secretDoc.style.opacity = '0';
+            
+            setTimeout(() => {
+                secretDoc.style.opacity = '1';
+                secretDoc.style.animation = 'float 7s ease-in-out infinite';
+            }, 10);
+            
+            // Специальный звуковой эффект
+            const audio = new Audio('spooky_sound.mp3');
+            audio.volume = 0.3;
+            audio.play();
+            
+            document.getElementById('progress-notice').textContent = 'Тайный документ раскрыт!';
+        }
+        
+        // Закрытие модального окна при клике вне его
+        document.getElementById('voice-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>
