@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тайны Замка</title>
+    <style>
+        :root {
+            --primary: #7b1fa2;
+            --primary-light: #ba68c8;
+            --primary-dark: #4a148c;
+            --text: #f3e5f5;
+            --bg: #0a0a12;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Cormorant Garamond', serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230a0a12"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23222" stroke-width="0.3"/></svg>');
+        }
+        
+        .container {
+            max-width: 800px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        
+        h1 {
+            color: var(--primary-light);
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px var(--primary);
+            opacity: 0;
+            animation: fadeIn 2s forwards 1s;
+        }
+        
+        .story-text {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin: 30px auto;
+            max-width: 700px;
+            min-height: 200px;
+            position: relative;
+        }
+        
+        .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            margin: 0 3px;
+        }
+        
+        .word.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .continue-btn {
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 40px;
+            opacity: 0;
+            transition: all 0.5s;
+            box-shadow: 0 0 15px rgba(123, 31, 162, 0.5);
+        }
+        
+        .continue-btn.visible {
+            opacity: 1;
+        }
+        
+        .continue-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--primary);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .glow {
+            text-shadow: 0 0 5px var(--primary-light);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(0,0,0,0.8) 70%);
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .start-prompt {
+            color: var(--primary-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="overlay"></div>
+    
+    <div class="container">
+        <h1>ТАЙНЫ ЗАМКА</h1>
+        
+        <div class="story-text" id="story-text">
+            <div class="start-prompt" id="start-prompt">Кликните, чтобы начать...</div>
+        </div>
+        
+        <button class="continue-btn" id="continue-btn" onclick="window.location.href='screen3.html'">
+            Продолжить исследование →
+        </button>
+    </div>
+    
+    <audio id="background-music" src="mystic.mp3" loop></audio>
+    <audio id="text-appear-sound" src="text_appear.mp3"></audio>
+
+    <script>
+        const story = "Этот замок хранит тайны веков. Здесь исчезали люди. Стены помнят их голоса. В полночь открывается дверь в иное измерение. Только хранитель знает путь. Но будь осторожен — некоторые двери лучше не открывать...";
+        const storyElement = document.getElementById('story-text');
+        const startPrompt = document.getElementById('start-prompt');
+        const continueBtn = document.getElementById('continue-btn');
+        const words = story.split(' ');
+        let wordElements = [];
+        
+        // Инициализация музыки
+        const backgroundMusic = document.getElementById('background-music');
+        backgroundMusic.volume = 0.3;
+        
+        // Ожидание клика для начала
+        startPrompt.addEventListener('click', () => {
+            startPrompt.style.display = 'none';
+            backgroundMusic.play().catch(e => console.log("Автовоспроизведение заблокировано"));
+            startStory();
+        });
+        
+        function startStory() {
+            // Создаем элементы для каждого слова
+            words.forEach((word, index) => {
+                const wordSpan = document.createElement('span');
+                wordSpan.className = 'word';
+                wordSpan.textContent = word + ' ';
+                wordElements.push(wordSpan);
+                storyElement.appendChild(wordSpan);
+                
+                if (index % 5 === 0) {
+                    wordSpan.classList.add('glow');
+                }
+            });
+            
+            // Показываем слова по одному
+            showWordsOneByOne();
+        }
+        
+        function showWordsOneByOne() {
+            let currentIndex = 0;
+            
+            function showNextWord() {
+                if (currentIndex < wordElements.length) {
+                    wordElements[currentIndex].classList.add('visible');
+                    
+                    if (currentIndex % 3 === 0) {
+                        document.getElementById('text-appear-sound').currentTime = 0;
+                        document.getElementById('text-appear-sound').play();
+                    }
+                    
+                    currentIndex++;
+                    setTimeout(showNextWord, 200); // Задержка между словами (200ms)
+                } else {
+                    // Все слова показаны — показываем кнопку
+                    setTimeout(() => {
+                        continueBtn.classList.add('visible');
+                    }, 500); // Задержка перед показом кнопки (500ms)
+                }
+            }
+            
+            showNextWord();
+        }
+    </script>
+</body>
+</html>

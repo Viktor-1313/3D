@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Легенда о Зеркалах</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Cormorant Garamond', serif;
+            color: #e0d8c0;
+            height: 100vh;
+            position: relative;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(70, 30, 10, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(30, 10, 50, 0.3) 0%, transparent 40%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23000"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%23222" stroke-width="0.3"/></svg>');
+        }
+
+        #story-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 700px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 2s;
+            z-index: 10;
+        }
+
+        .story-text {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .word {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            margin: 0 2px;
+        }
+
+        .word.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #mirror-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 500px;
+            border: 15px solid #3a2a10;
+            border-radius: 5px;
+            box-shadow: 
+                inset 0 0 50px rgba(0, 0, 0, 0.9),
+                0 0 40px rgba(150, 100, 50, 0.3);
+            z-index: 5;
+            opacity: 0.3;
+            background: 
+                linear-gradient(135deg, transparent 0%, rgba(50, 30, 10, 0.2) 100%),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23110d08"/><path d="M20,20 L80,80 M80,20 L20,80" stroke="%233a2a10" stroke-width="1"/></svg>');
+        }
+
+        #candles {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            z-index: 8;
+        }
+
+        .candle {
+            width: 30px;
+            height: 100px;
+            background: 
+                linear-gradient(to right, #3a2a10 0%, #5a3a20 30%, #3a2a10 100%);
+            position: relative;
+        }
+
+        .flame {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 50px;
+            background: 
+                radial-gradient(ellipse at center, #fff8a0 0%, #ffb347 50%, transparent 70%);
+            border-radius: 50% 50% 20% 20%;
+            filter: blur(5px);
+            animation: flicker 3s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0%, 100% { transform: translateX(-50%) scale(1, 1); opacity: 0.8; }
+            25% { transform: translateX(-50%) scale(0.9, 1.1); opacity: 1; }
+            50% { transform: translateX(-50%) scale(1.1, 0.9); opacity: 0.7; }
+            75% { transform: translateX(-50%) scale(0.95, 1.05); opacity: 0.9; }
+        }
+
+        #continue-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(45deg, #3a2a10, #5a3a20);
+            color: #e0d8c0;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            opacity: 0;
+            transition: all 1s;
+            z-index: 100;
+            box-shadow: 0 0 15px rgba(150, 100, 50, 0.5);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        #continue-btn:hover {
+            box-shadow: 0 0 25px rgba(200, 150, 50, 0.7);
+        }
+
+        #start-prompt {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #e0d8c0;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+            z-index: 400;
+            cursor: pointer;
+            opacity: 1;
+            transition: opacity 1s;
+            font-style: italic;
+        }
+
+        .dust-particle {
+            position: absolute;
+            background: rgba(200, 180, 120, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        #hidden-face {
+            position: absolute;
+            width: 120px;
+            height: 180px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 20, 10, 0.1);
+            border-radius: 50%;
+            z-index: 6;
+            opacity: 0;
+            transition: opacity 5s;
+        }
+
+        .eye-socket {
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            top: 40%;
+            border-radius: 50%;
+        }
+
+        #left-socket {
+            left: 25%;
+        }
+
+        #right-socket {
+            right: 25%;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="start-prompt">Коснись, чтобы узнать правду о зеркалах...</div>
+    <div id="mirror-frame"></div>
+    <div id="hidden-face">
+        <div id="left-socket" class="eye-socket"></div>
+        <div id="right-socket" class="eye-socket"></div>
+    </div>
+    <div id="candles">
+        <div class="candle"><div class="flame"></div></div>
+        <div class="candle"><div class="flame"></div></div>
+    </div>
+    <div id="story-container">
+        <div class="story-text" id="story-text"></div>
+    </div>
+    <button id="continue-btn" onclick="window.location.href='screen8.html'">Посмотреть в зеркало</button>
+
+    <!-- Аудио элементы -->
+    <audio id="screen9-sound" src="screen9.mp3"></audio>
+    <audio id="ambient" src="old_room.mp3" loop></audio>
+    <audio id="page-turn" src="page_turn.mp3"></audio>
+    <audio id="whisper" src="ghost_whisper.mp3"></audio>
+
+    <script>
+        // Воспроизводим screen9.mp3 при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            const screen9Sound = document.getElementById('screen9-sound');
+            screen9Sound.volume = 0.5;
+            
+            const playAudio = () => {
+                screen9Sound.play().catch(e => {
+                    console.log("Автовоспроизведение заблокировано");
+                    document.getElementById('start-prompt').textContent = "Кликните, чтобы услышать историю...";
+                });
+            };
+            
+            // Пытаемся воспроизвести сразу
+            playAudio();
+            
+            // Если не получилось, пробуем после первого клика
+            document.addEventListener('click', function() {
+                if (screen9Sound.paused) playAudio();
+            }, { once: true });
+        });
+
+        // Текст легенды
+        const story = "Говорят, в этих зеркалах остаются души... Тех, кто исчез в стенах замка. В тишине полночи можно увидеть их лица. Они смотрят. Ждут. Ищут новых хранителей. Ты готова посмотреть?";
+        
+        // Инициализация элементов
+        const storyContainer = document.getElementById('story-container');
+        const storyElement = document.getElementById('story-text');
+        const startPrompt = document.getElementById('start-prompt');
+        const continueBtn = document.getElementById('continue-btn');
+        const hiddenFace = document.getElementById('hidden-face');
+        const words = story.split(' ');
+        let wordElements = [];
+
+        // Создаем частицы пыли
+        function createDust() {
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'dust-particle';
+                particle.style.width = `${Math.random() * 4 + 1}px`;
+                particle.style.height = particle.style.width;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.opacity = Math.random() * 0.6;
+                document.body.appendChild(particle);
+
+                // Анимация движения частиц
+                const duration = 10000 + Math.random() * 20000;
+                const xMove = (Math.random() - 0.5) * 200;
+                const yMove = (Math.random() - 0.5) * 200;
+
+                particle.animate([
+                    { transform: 'translate(0, 0)' },
+                    { transform: `translate(${xMove}px, ${yMove}px)` }
+                ], {
+                    duration: duration,
+                    iterations: Infinity,
+                    direction: 'alternate',
+                    easing: 'ease-in-out'
+                });
+            }
+        }
+
+        // Показ текста по словам
+        function showStory() {
+            // Создаем элементы для каждого слова
+            words.forEach((word, index) => {
+                const wordSpan = document.createElement('span');
+                wordSpan.className = 'word';
+                wordSpan.textContent = word + ' ';
+                wordElements.push(wordSpan);
+                storyElement.appendChild(wordSpan);
+
+                // Показываем слова с задержкой
+                setTimeout(() => {
+                    wordSpan.classList.add('visible');
+                    
+                    // Спецэффекты на определенных словах
+                    if (word.includes('души') || word.includes('лица') || word.includes('смотрят')) {
+                        document.getElementById('page-turn').currentTime = 0;
+                        document.getElementById('page-turn').play();
+                        slightShake();
+                    }
+                    
+                    // В конце предложения - шепот
+                    if (word.includes('...') || word.includes('?')) {
+                        document.getElementById('whisper').currentTime = 0;
+                        document.getElementById('whisper').play();
+                    }
+                }, index * 200);
+            });
+
+            // После полного текста показываем кнопку и эффекты
+            setTimeout(() => {
+                continueBtn.style.opacity = '1';
+                storyContainer.style.opacity = '1';
+                hiddenFace.style.opacity = '0.3';
+            }, words.length * 200 + 1000);
+        }
+
+        // Легкое дрожание экрана
+        function slightShake() {
+            const body = document.body;
+            const startTime = Date.now();
+            const duration = 800;
+            
+            function updateShake() {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+                
+                if (progress < 1) {
+                    const x = (Math.random() - 0.5) * 3 * (1 - progress);
+                    const y = (Math.random() - 0.5) * 3 * (1 - progress);
+                    body.style.transform = `translate(${x}px, ${y}px)`;
+                    requestAnimationFrame(updateShake);
+                } else {
+                    body.style.transform = 'translate(0, 0)';
+                }
+            }
+            
+            updateShake();
+        }
+
+        // Начало опыта
+        startPrompt.addEventListener('click', function() {
+            this.style.opacity = '0';
+            setTimeout(() => this.style.display = 'none', 1000);
+            
+            // Запускаем звук
+            document.getElementById('ambient').volume = 0.3;
+            document.getElementById('ambient').play();
+            
+            // Создаем атмосферу
+            createDust();
+            storyContainer.style.opacity = '1';
+            
+            // Начинаем рассказ
+            setTimeout(showStory, 1500);
+        });
+    </script>
+</body>
+</html>
